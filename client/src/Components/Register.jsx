@@ -1,67 +1,39 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AuthService from "../Services/auth.service";
+import { connect } from "react-redux";
+import { clearMessage, setErrMessage, setMessage } from "../Reducer/reducers";
+import { useFormik } from "formik";
+import { registerSchema } from "../Schema/ValidationSchema";
 
-const Register = () => {
+const Register = ({ setMsg, setErrMsg, clearMsg, errMsg, msg }) => {
+  console.log("return Register");
+
   const navigate = useNavigate();
-  const [userData, setUserData] = useState({
+  const userData = {
     Name: "",
     Password: "",
     Email: "",
     MobileNo: 0,
     DOB: "",
-  });
-  const [message, setMessage] = useState("");
-  const [errMsg, setErrMsg] = useState("");
-  const [errors, setErrors] = useState({});
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!userData.Name) {
-      newErrors.Name = "Name is required";
-    } else if (userData.Name.length < 3) {
-      newErrors.Name = "Name should be atleast 3 characters long.";
-    }
-
-    if (!userData.Email) {
-      newErrors.Email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(userData.Email)) {
-      newErrors.Email = "Invalid email address";
-    }
-
-    if (!userData.Password) {
-      newErrors.Password = "Password is required";
-    } else if (userData.Password.length < 8) {
-      newErrors.Password = "Password must be at least 8 characters long";
-    }
-
-    if (!userData.MobileNo) {
-      newErrors.MobileNo = "Mobile Number is required";
-    } else if (userData.MobileNo.length !== 10) {
-      newErrors.MobileNo = "Mobile number must be 10 digits long";
-    }
-
-    if (!userData.DOB) {
-      newErrors.DOB = "Date of birth is required";
-    }
-    setErrors(newErrors);
-    console.log("newErrors", newErrors);
-    return Object.keys(newErrors).length === 0;
   };
-
+  const [confirmBox, setConfirmBox] = useState(false);
+  const [errBox, setErrBox] = useState(false);
   const handleSubmit = async (e) => {
     try {
-      e.preventDefault();
-      if (validateForm()) {
-        const user = await AuthService.CreateAccount(userData);
-        // console.log(user);
-        if (user) {
-          if (user.status === 200) {
-            setMessage(user.data.data.msg);
-            navigate("/login");
-          }
+      console.log(e);
+      const user = await AuthService.CreateAccount(e);
+      if (user) {
+        if (user.status === 200) {
+          setMsg(user.data.data.msg);
         }
+        setConfirmBox(true);
+        setTimeout(() => {
+          clearMsg();
+          setConfirmBox(false);
+          navigate("/login");
+          formik.resetForm();
+        }, 2000);
       }
     } catch (ex) {
       console.log(ex);
@@ -72,71 +44,49 @@ const Register = () => {
           .split(":");
         console.log(errors[1]);
         setErrMsg(errors[1]);
+        setErrBox(true);
       } else {
         setErrMsg(ex.response.data.error);
-      }
-    }
-  };
-  const handleChange = async (e) => {
-    try {
-      const { name, value } = e.target;
-      if (value.length > 0) {
-        if (name === "Email") {
-          if (!/\S+@\S+\.\S+/.test(value)) {
-            setErrors((prev) => ({ ...prev, [name]: `${name} is invalid!` }));
-          } else {
-            setErrors((prev) => ({ ...prev, [name]: `` }));
-          }
-        } else if (name === "Password") {
-          if (value.length < 8) {
-            setErrors((prev) => ({
-              ...prev,
-              [name]: `${name} must be 8 characters long!`,
-            }));
-          } else {
-            setErrors((prev) => ({ ...prev, [name]: `` }));
-          }
-        } else if (name === "MobileNo") {
-          if (value.length < 10) {
-            setErrors((prev) => ({
-              ...prev,
-              [name]: `${name} must be 10 digits!`,
-            }));
-          } else {
-            setErrors((prev) => ({ ...prev, [name]: `` }));
-          }
-        } else if (name === "Name") {
-          if (value.length < 3) {
-            setErrors((prev) => ({
-              ...prev,
-              [name]: `${name} atleast 3 characters long!`,
-            }));
-          } else {
-            setErrors((prev) => ({ ...prev, [name]: `` }));
-          }
+        setErrBox(true);
+        console.log(ex.response.data.error);
+        if (ex.response.data.error === "Email is already registered.") {
+          setTimeout(() => {
+            setErrMsg("");
+            setErrBox(false);
+            navigate("/login");
+            formik.resetForm();
+          }, 2000);
         } else {
-          setErrors((prev) => ({ ...prev, [name]: `` }));
+          setTimeout(() => {
+            setErrMsg("");
+            setErrBox(false);
+            formik.resetForm();
+          }, 2000);
         }
-      } else {
-        setErrors((prev) => ({ ...prev, [name]: `${name} is required` }));
       }
-      setUserData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    } catch (ex) {
-      console.log(ex);
     }
   };
+
+  const formik = useFormik({
+    initialValues: userData,
+    validationSchema: registerSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: handleSubmit,
+  });
+
   return (
     <>
       <div className="container p-2">
-        {errMsg ? (
-          <div className="alert alert-danger p-2">{errMsg}</div>
-        ) : (
-          message && <div className="alert alert-success-2">{message}</div>
+        {errBox && (
+          <div className="alert alert-danger text-center fw-bold p-2">
+            {errMsg}
+          </div>
         )}
-        <form onSubmit={handleSubmit}>
+        {confirmBox && msg && (
+          <div className="alert alert-success text-center fw-bold">{msg}</div>
+        )}
+        {/* <form onSubmit={formik.handleSubmit}>
           <div className="form-group my-3">
             <label htmlFor="exampleInputName" className="form-label ">
               Name
@@ -148,9 +98,13 @@ const Register = () => {
               className={`form-control`}
               id="exampleInputName"
               placeholder="Enter your name..."
-              onChange={handleChange}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              defaultValue={formik.values.Name}
             />
-            {errors.Name && <p className="alert alert-danger">{errors.Name}</p>}
+            {formik.touched.Name && formik.errors && formik.errors.Name && (
+              <div className="alert alert-danger">{formik.errors.Name}</div>
+            )}
           </div>
           <div className="form-group my-3">
             <label htmlFor="exampleInputEmail1">Email address</label>
@@ -161,13 +115,15 @@ const Register = () => {
               id="exampleInputEmail1"
               aria-describedby="emailHelp"
               placeholder="Enter your email address"
-              onChange={handleChange}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              defaultValue={formik.values.Email}
             />
             <small id="emailHelp" className="form-text text-muted">
               We'll never share your email with anyone else.
             </small>
-            {errors.Email && (
-              <p className="alert alert-danger">{errors.Email}</p>
+            {formik.touched.Email && formik.errors && formik.errors.Email && (
+              <div className="alert alert-danger">{formik.errors.Email}</div>
             )}
           </div>
           <div className="form-group my-3">
@@ -178,25 +134,38 @@ const Register = () => {
               className="form-control"
               id="exampleInputPassword1"
               placeholder="Password"
-              onChange={handleChange}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              defaultValue={formik.values.Password}
             />
-            {errors.Password && (
-              <p className="alert alert-danger">{errors.Password}</p>
-            )}
+            {formik.touched.Password &&
+              formik.errors &&
+              formik.errors.Password && (
+                <div className="alert alert-danger">
+                  {formik.errors.Password}
+                </div>
+              )}
           </div>
           <div className="form-group my-3">
             <label htmlFor="exampleInputMobileNo">Mobile Number</label>
             <input
-              type="number"
+              type="text"
               name="MobileNo"
               className="form-control"
               id="exampleInputMobileNo"
               placeholder="Enter your Mobile Number"
-              onChange={handleChange}
+              maxLength={10}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              defaultValue={formik.values.MobileNo}
             />
-            {errors.MobileNo && (
-              <p className="alert alert-danger">{errors.MobileNo}</p>
-            )}
+            {formik.touched.MobileNo &&
+              formik.errors &&
+              formik.errors.MobileNo && (
+                <div className="alert alert-danger">
+                  {formik.errors.MobileNo}
+                </div>
+              )}
           </div>
           <div className="form-group my-3">
             <label htmlFor="exampleInputDOB">DOB</label>
@@ -206,11 +175,18 @@ const Register = () => {
               name="DOB"
               id="exampleInputDOB"
               placeholder="Enter your Date of birth"
-              onChange={handleChange}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              defaultValue={formik.values.DOB}
             />
-            {errors.DOB && <p className="alert alert-danger">{errors.DOB}</p>}
+            {formik.touched.DOB && formik.errors && formik.errors.DOB && (
+              <div className="alert alert-danger">{formik.errors.DOB}</div>
+            )}
           </div>
-          <button type="submit" className="btn btn-primary">
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={!formik.isValid}>
             Register
           </button>
           <div>
@@ -219,10 +195,21 @@ const Register = () => {
               Login
             </Link>
           </div>
-        </form>
+        </form> */}
+        cognitive
       </div>
     </>
   );
 };
 
-export default Register;
+const mapDispatchToProps = (dispatch, ownProps) => {
+  return {
+    setMsg: (message) => dispatch(setMessage(message)),
+    setErrMsg: (message) => dispatch(setErrMessage(message)),
+    clearMsg: () => dispatch(clearMessage()),
+  };
+};
+const mapStateToProps = (state) => {
+  return { msg: state.reducer.msg, errMsg: state.reducer.errMsg };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(Register);

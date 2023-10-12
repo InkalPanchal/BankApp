@@ -8,6 +8,8 @@ import { connect } from "react-redux";
 import { LOGIN, LOGOUT } from "../Actions/actions";
 
 const TransactionHistory = ({ logout }) => {
+  console.log("return TransactionHistory");
+
   const [transactionss, setTransactionss] = useState([]);
   const [errMsg, setErrMsg] = useState("");
   const [currentPage, setCurrentPage] = useState(0);

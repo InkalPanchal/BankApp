@@ -1,12 +1,10 @@
 const jwt = require("jsonwebtoken");
 const globalCongig = require("../Authentication/global.config");
-const { application } = require("express");
+
 const jwtdecode = require("jwt-decode");
 const VerifyToken = (req, res, next) => {
   const token = req.headers["authentication"];
-  console.log(token);
-  const decodedToken = jwtdecode(token);
-
+  // console.log(token);
   if (!token) {
     return res.status(401).json({
       msg: "Unauthorized Access",
@@ -17,7 +15,6 @@ const VerifyToken = (req, res, next) => {
   console.log(splitToken);
   jwt.verify(
     splitToken[0],
-    token,
     globalCongig.secretKey,
     {
       algorithms: globalCongig.algorithm,

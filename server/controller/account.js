@@ -1,4 +1,4 @@
-const UserModel = require("../models/User");
+const AccountModel = require("../models/Account");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const globalConfig = require("../Authentication/global.config");
@@ -6,70 +6,20 @@ const Transaction = require("../models/Transaction");
 const nodemailer = require("nodemailer");
 
 class UserController {
-  static async GetUsers(req, res) {
+  static async CreateSavingAccount(req, res) {
     try {
-      const users = await UserModel.find();
-      if (users) {
-        // console.log(users);
-        res.status(200).json({
-          msg: "Users found.",
-          data: users,
-        });
-      }
-    } catch (ex) {
-      res.status(404).json({
-        msg: "Error while fetching users.",
-        error: ex,
-      });
-    }
-  }
-
-  static async GetUserById(req, res) {
-    try {
-      const user = await UserModel.find({ _id: req.params.id });
-      if (user) {
-        // console.log(user);
-        res.status(200).json({
-          msg: "User found.",
-          data: user,
-        });
-      }
-    } catch (ex) {
-      res.status(404).json({
-        msg: "Error while fetching user.",
-        error: ex,
-      });
-    }
-  }
-  //create new account/ signup user
-  static async CreateAccount(req, res) {
-    try {
-      const { Name, Password, Email, MobileNo, DOB } = req.body;
-      // console.log(typeof DOB);
-      const userExists = await UserModel.findOne({ Email: Email });
-
+      console.log(req.body);
+      const userExists = await UserModel.findOne({ _id: req.body.UserId });
       if (userExists) {
-        return res.status(409).json({ error: "Email is already registered." });
+        const newAccount = new AccountModel({
+          AccountType: "Saving",
+          BankName: "MyBank",
+          UserId: req.body.UserId,
+          TotalBalance: 0,
+        });
       }
-      const salt = await bcrypt.genSalt(10);
-      console.log(salt);
-      const hashedPassword = await bcrypt.hash(Password, salt);
-
-      const newUser = new UserModel({
-        Name: Name,
-        Password: hashedPassword,
-        Email: Email,
-        MobileNo: MobileNo,
-        DOB: DOB,
-        // Balance: 0,
-      });
-      await newUser.save();
-      res.status(200).json({
-        msg: "New account created successfully.",
-        data: newUser,
-      });
     } catch (ex) {
-      res.status(400).json({
+      res.status(500).json({
         msg: "Error while creating new user.",
         error: ex.message,
       });

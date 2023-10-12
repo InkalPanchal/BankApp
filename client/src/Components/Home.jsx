@@ -6,6 +6,7 @@ import { connect } from "react-redux";
 import Container from "react-bootstrap/Container";
 
 const Home = ({ isLoggedIn }) => {
+  console.log("return home");
   const [userData, setUserData] = useState({});
   const navigate = useNavigate();
   useEffect(() => {
@@ -15,14 +16,19 @@ const Home = ({ isLoggedIn }) => {
       setUserData(user);
     } else {
       navigate("/login");
+      setUserData(null);
     }
-  }, []);
+  }, [localStorage]);
   return (
     <>
       <Navbar user={userData} />
-      <Container>
+
+      <div>
         <Outlet />
-      </Container>
+      </div>
+      <footer className="bg-dark text-white text-center py-3 fixed-bottom">
+        <div className="container">Footer</div>
+      </footer>
     </>
   );
 };

@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-// import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
 import { LOGIN, LOGOUT } from "../Actions/actions";
 import { connect } from "react-redux";
 
@@ -10,58 +9,47 @@ import NavDropdown from "react-bootstrap/NavDropdown";
 import { useNavigate } from "react-router-dom";
 import { getCookie } from "../Services/cookieFunction";
 
-const Navbar = ({ logout, isLoggedIn, login }) => {
+const Navbar = ({ logout, isLoggedIn, login, user }) => {
+  console.log("user", user);
+  console.log("return Navbar");
+
   const navigate = useNavigate();
-  // const [isLogin, setIsLogin] = useState(false);
-  // const [UserrId, setUserrId] = useState("");
-  const [user, setUser] = useState({
-    UserId: "",
-    Name: "",
-    Email: "",
-  });
+
   useEffect(() => {
     const token = getCookie("token");
     if (!token) {
-      // setIsLogin(isLoggedIn);
-      console.log("notloggedin", isLoggedIn);
-      console.log("----------------------------");
       logout();
-      setUser(() => ({
-        ...user,
-        UserId: "",
-        Name: "Login",
-        Email: "",
-      }));
       navigate("/login");
     } else {
-      login();
-      var { UserId, Name } = JSON.parse(localStorage.getItem("user"));
-      // setUserrId(UserId);
-      setUser(() => ({ ...user, USerId: UserId, Name: Name }));
-      // setIsLogin(isLoggedIn);
-      console.log("loggedin", isLoggedIn);
-      console.log("----------------------------");
+      // login();
+      console.log(isLoggedIn);
     }
-    console.log("isLoggedIn changed");
-  }, [setUser, isLoggedIn]);
+    // console.log("isLoggedIn changed");
+  }, [isLoggedIn, user]);
 
   return (
     <NavbarDiv variant="dark" bg="dark" expand="lg">
       <Container>
-        <NavbarDiv.Brand href="#home">MyBank</NavbarDiv.Brand>
+        <NavbarDiv.Brand href="/home">MyBank</NavbarDiv.Brand>
         <NavbarDiv.Toggle aria-controls="navbar-dark-example" />
         <NavbarDiv.Collapse id="navbar-dark-example">
           <Nav>
-            <Nav.Link href="/">Home</Nav.Link>
-            <Nav.Link href="about">About Us</Nav.Link>
-            <Nav.Link href="contact">Contact Us</Nav.Link>
+            <Nav.Link className="text-light" href="/home">
+              Home
+            </Nav.Link>
+            <Nav.Link className="text-light" href="about">
+              About Us
+            </Nav.Link>
+            <Nav.Link className="text-light" href="contact">
+              Contact Us
+            </Nav.Link>
           </Nav>
           <Nav className="ms-auto">
             <NavDropdown
               id="nav-dropdown-dark-example"
-              title={user.Name}
+              title={user?.Name ? user?.Name : "Profile"}
               menuVariant="dark">
-              {isLoggedIn ? (
+              {user?.Name ? (
                 <>
                   {/* <NavDropdown.Item href="/accounts">Accounts</NavDropdown.Item> */}
                   <NavDropdown.Item href="/deposit">Deposit</NavDropdown.Item>
@@ -74,9 +62,10 @@ const Navbar = ({ logout, isLoggedIn, login }) => {
                   <NavDropdown.Divider />
                   <NavDropdown.Item
                     onClick={() => {
+                      user.Name = "";
                       logout();
+
                       navigate("/login");
-                      //document.location.reload();
                     }}>
                     LogOut
                   </NavDropdown.Item>
@@ -104,7 +93,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   };
 };
 const mapStateToProps = (state) => {
-  // console.log(state);
   return { isLoggedIn: state.reducer.isLoggedIn };
 };
 

@@ -18,6 +18,7 @@ const store = createStore(
 // console.log("after logout", store.getState());
 export const UserContext = createContext({});
 const App = () => {
+  console.log("return app");
   return (
     // <UserContext.Provider value={""}>
     <Provider store={store}>

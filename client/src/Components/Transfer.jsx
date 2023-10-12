@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { LOGIN, LOGOUT } from "../Actions/actions";
 import { connect } from "react-redux";
 const Transfer = ({ logout }) => {
+  console.log("return Transfer");
+
   const [amnt, setAmount] = useState(0);
   const [receiver, setReceiver] = useState("");
   const [message, setMessage] = useState("");

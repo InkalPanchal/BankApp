@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-// const bcrypt = require('bcrypt')
+const validator = require("validator");
 const UserSchema = new mongoose.Schema(
   {
     Name: {
@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema(
       required: [true, "Email is required"],
       maxlength: [25, "Email should not exeeds above 20 characters"],
       trim: true,
+      lowercase: true,
+      validate: {
+        validator: validator.isEmail,
+        message: "{VALUE} is not a valid email",
+        isAsync: false,
+      },
     },
     MobileNo: {
       type: Number,
