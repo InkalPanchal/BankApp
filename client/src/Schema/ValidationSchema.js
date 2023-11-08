@@ -32,3 +32,9 @@ export const registerSchema = yup.object({
     .required("Mobile number is required"),
   DOB: yup.date().required("DOB is required"),
 });
+
+export const accountSchema = yup.object({
+  AccountType:yup.string().required("Account type is required."),
+  Branch:yup.string().required("Branch is required."),
+  // UserId:yup.string().required("User id is required"),
+})
